@@ -1871,7 +1871,7 @@
         // WEAPONS DATA
         const weapons = [
             { 
-                name: "LW3-Tundra", 
+                name: "LW3 - Tundra", 
                 type: "sniper", 
                 code: "1A2B5A8A9E", 
                 image: "https://i.imgur.com/zO34m9w.jpg ", 
@@ -2495,7 +2495,10 @@
             if (!code) return;
             
             // Format: "Gun-Name-CODE" - hyphens lang, walang spaces!
-            const cleanName = gunName.replace(/\s+/g, '-');
+            // Una, palitan " - " (space hyphen space) with "-" para hindi mag-triple hyphen
+            let cleanName = gunName.replace(/\s+-\s+/g, '-');
+            // Then palitan remaining spaces with hyphens
+            cleanName = cleanName.replace(/\s+/g, '-');
             const textToCopy = `${cleanName}-${code}`;
             
             // Skip sound on mobile for performance
