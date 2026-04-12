@@ -1662,12 +1662,6 @@
 <body>
     <canvas id="confetti-canvas"></canvas>
     
-    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg ">
-            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
-        </svg>
-    </button>
-
     <button class="mobile-perf-toggle" id="mobilePerfToggle" onclick="toggleMobilePerformance()" title="Mobile Performance Mode (Reduces animations)">
         🚀
     </button>
@@ -2496,7 +2490,7 @@
             }
         }
 
-        // OPTIMIZED COPY FUNCTION - Copies Gun Name + Code together
+        // OPTIMIZED COPY FUNCTION - Works on PC and Mobile
         async function copyCode(gunName, code, btn, event) {
             if (!code) return;
             
@@ -2515,28 +2509,62 @@
                 navigator.vibrate(30);
             }
             
-            try {
-                await navigator.clipboard.writeText(textToCopy);
-                
+            let copied = false;
+            
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    copied = true;
+                } catch (err) {
+                    // Fallback to old method
+                    copied = fallbackCopy(textToCopy);
+                }
+            } else {
+                // Use fallback for older browsers
+                copied = fallbackCopy(textToCopy);
+            }
+            
+            // Show feedback
+            if (copied) {
                 const originalText = btn.innerHTML;
                 btn.innerHTML = '<span>✓ Copied!</span>';
                 btn.classList.add('copied');
                 
-                showToast(`${gunName} code copied!`);
+                showToast(`${gunName} copied!`);
                 
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.classList.remove('copied');
                 }, 1500);
-                
-            } catch (err) {
+            } else {
+                showToast('Failed to copy. Try again!');
+            }
+        }
+        
+        // Fallback copy method for mobile/old browsers
+        function fallbackCopy(text) {
+            try {
                 const textArea = document.createElement('textarea');
-                textArea.value = textToCopy;
+                textArea.value = text;
+                
+                // Make it invisible but selectable
+                textArea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;z-index:-1;';
+                
                 document.body.appendChild(textArea);
+                
+                // Select the text
+                textArea.focus();
                 textArea.select();
-                document.execCommand('copy');
+                textArea.setSelectionRange(0, 99999); // For mobile
+                
+                // Copy
+                const successful = document.execCommand('copy');
                 document.body.removeChild(textArea);
-                showToast('Code copied!');
+                
+                return successful;
+            } catch (err) {
+                return false;
             }
         }
 
